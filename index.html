@@ -41,6 +41,7 @@
         .app-layout {
             display: flex;
             min-height: 100vh;
+            justify-content: flex-start;
         }
 
         aside {
@@ -100,13 +101,13 @@
             border-left: 3px solid var(--primary);
         }
 
-        /* CONTENIDO PRINCIPAL - AJUSTADO PARA EVITAR TUPIR EL LOGOTIPO */
+        /* CONTENIDO PRINCIPAL - CORREGIDO PARA LIBERAR LA M */
         main {
-            margin-left: 320px;
-            margin-right: 50px;
+            margin-left: 290px;
+            margin-right: 40px;
             flex: 1;
-            padding: 30px 0;
-            max-width: calc(100% - 370px);
+            padding: 30px 20px 30px 20px;
+            max-width: calc(100% - 310px);
         }
 
         .vista-seccion {
@@ -779,173 +780,30 @@ async function guardarCliente() {
 
     const fileFrente = document.getElementById('fotoFrenteCliente').files[0];
     const fileReverso = document.getElementById('fotoReversoCliente').files[0];
+    
+    const fotoFrenteBase64 = await comprimirImagen(fileFrente);
+    const fotoReversoBase64 = await comprimirImagen(fileReverso);
 
-    try {
-        const fotoFrenteBase64 = await comprimirImagen(fileFrente);
-        const fotoReversoBase64 = await comprimirImagen(fileReverso);
+    const { error } = await db.from('clientes').insert([{
+        nombre,
+        telefono,
+        direccion,
+        foto_frente: fotoFrenteBase64,
+        foto_reverso: fotoReversoBase64
+    }]);
 
-        const { error } = await db.from('clientes').insert([{
-            nombre,
-            telefono,
-            direccion,
-            foto_frente: fotoFrenteBase64,
-            foto_reverso: fotoReversoBase64
-        }]);
-
-        if(error) return alert('Error al guardar cliente: ' + error.message);
-
+    if(error) {
+        alert('Error al guardar cliente: ' + error.message);
+    } else {
+        alert('¡Cliente guardado con éxito!');
         document.getElementById('nombreCliente').value = '';
         document.getElementById('telCliente').value = '';
         document.getElementById('dirCliente').value = '';
         document.getElementById('fotoFrenteCliente').value = '';
         document.getElementById('fotoReversoCliente').value = '';
-        
-        alert('Cliente guardado exitosamente');
         cargarDatos();
-    } catch(err) {
-        alert('Ocurrió un error al procesar las credenciales.');
     }
 }
-
-function verFotoGrande(url, titulo) {
-    document.getElementById('tituloFotoModal').innerText = titulo;
-    document.getElementById('imagenAmpliada').src = url;
-    document.getElementById('modalFoto').style.display = 'flex';
-}
-
-function cerrarModalFoto() {
-    document.getElementById('modalFoto').style.display = 'none';
-}
-
-function cerrarModal() {
-    document.getElementById('modalDias').style.display = 'none';
-}
-
-async function verDias(prestamoId, clienteNombre, totalConInteres) {
-    document.getElementById('modalTitulo').innerText = 'Historial de Cuotas - ' + clienteNombre;
-    
-    const { data: cuotas } = await db.from('cuotas').select('*').eq('prestamo_id', prestamoId).order('id', { ascending: true });
-    
-    let totalAbonado = (cuotas || []).reduce((sum, c) => sum + (parseFloat(c.monto_pagado) || 0), 0);
-    let saldoPendiente = totalConInteres - totalAbonado;
-    if(saldoPendiente < 0) saldoPendiente = 0;
-
-    document.getElementById('modalTotalPrestamo').innerText = '$' + totalConInteres.toLocaleString(undefined, {minimumFractionDigits: 2});
-    document.getElementById('modalTotalAbonado').innerText = '$' + totalAbonado.toLocaleString(undefined, {minimumFractionDigits: 2});
-    document.getElementById('modalSaldoPendiente').innerText = '$' + saldoPendiente.toLocaleString(undefined, {minimumFractionDigits: 2});
-
-    let htmlCuotas = '';
-    (cuotas || []).forEach((c, index) => {
-        let pagado = parseFloat(c.monto_pagado) || 0;
-        let esperado = parseFloat(c.monto_esperado) || 0;
-        let estadoCuota = pagado >= esperado ? '<span style="color:var(--success); font-weight:bold;">Pagada</span>' : '<span style="color:var(--danger);">Pendiente</span>';
-
-        htmlCuotas += '<tr>' +
-            '<td>' + (index + 1) + '</td>' +
-            '<td>' + (c.fecha || 'N/A') + '</td>' +
-            '<td>$' + esperado.toFixed(2) + '</td>' +
-            '<td>$' + pagado.toFixed(2) + '</td>' +
-            '<td>' + estadoCuota + '</td>' +
-            '<td><button class="btn-blue" style="padding: 3px 8px; font-size: 11px;" onclick="editarCuotaModal(' + c.id + ', ' + prestamoId + ', \'' + clienteNombre + '\', ' + totalConInteres + ')">Modificar</button></td>' +
-            '</tr>';
-    });
-
-    document.getElementById('tablaCuotasModal').innerHTML = htmlCuotas;
-    document.getElementById('modalDias').style.display = 'flex';
-}
-
-async function editarCuotaModal(cuotaId, prestamoId, clienteNombre, totalConInteres) {
-    let nuevoMonto = prompt("Ingresa el nuevo monto pagado para esta cuota:");
-    if(nuevoMonto === null) return;
-    let montoNum = parseFloat(nuevoMonto);
-    if(isNaN(montoNum) || montoNum < 0) return alert("Monto inválido");
-
-    await db.from('cuotas').update({ monto_pagado: montoNum }).eq('id', cuotaId);
-    await verDias(prestamoId, clienteNombre, totalConInteres);
-    await cargarDatos();
-}
-
-async function guardarGasto() {
-    const concepto = document.getElementById('conceptoGasto').value;
-    const monto = parseFloat(document.getElementById('montoGasto').value);
-    const categoria = document.getElementById('categoriaGasto').value || 'General';
-    const fecha = obtenerFechaLocalHoy();
-
-    if(!concepto || isNaN(monto) || monto <= 0) return alert('Completa los campos de gasto correctamente');
-
-    const { error } = await db.from('gastos').insert([{ concepto, monto, categoria, fecha }]);
-    if(error) return alert('Error al registrar el gasto');
-
-    document.getElementById('conceptoGasto').value = '';
-    document.getElementById('montoGasto').value = '';
-    document.getElementById('categoriaGasto').value = '';
-    
-    cargarDatos();
-}
-
-async function eliminarGasto(id) {
-    if(!confirm('¿Estás seguro de eliminar este gasto?')) return;
-    const { error } = await db.from('gastos').delete().eq('id', id);
-    if(error) return alert('Error al borrar gasto');
-    cargarDatos();
-}
-
-async function eliminarCliente(id) {
-    if(!confirm('¿Estás seguro de eliminar este cliente?')) return;
-    const { error } = await db.from('clientes').delete().eq('id', id);
-    if(error) return alert('Error al borrar cliente');
-    cargarDatos();
-}
-
-function generarReporteCierre() {
-    alert('Función de Corte de Caja generada con éxito para la jornada actual.');
-}
-
-async function generarPrestamo() {
-    const clienteId = document.getElementById('selectCliente').value;
-    const monto = parseFloat(document.getElementById('montoPrestamo').value);
-    const plazo = parseInt(document.getElementById('plazoDias').value);
-    const frecuencia = document.getElementById('frecuenciaPrestamo').value;
-
-    if(!clienteId || isNaN(monto) || isNaN(plazo)) return alert('Selecciona un cliente y define montos válidos');
-
-    const cuotaDiaria = (monto * 1.25) / plazo;
-
-    const { data: prestamoIns, error } = await db.from('prestamos').insert([{
-        cliente_id: clienteId,
-        monto_prestado: monto,
-        plazo_dias: plazo,
-        frecuencia: frecuencia,
-        cuota_diaria: cuotaDiaria,
-        estado: 'ACTIVO'
-    }]).select();
-
-    if(error || !prestamoIns) return alert('Error al crear el préstamo');
-
-    const prestamoId = prestamoIns[0].id;
-    let cuotasArray = [];
-    let fechaBase = new Date();
-
-    for(let i = 1; i <= plazo; i++) {
-        fechaBase.setDate(fechaBase.getDate() + 1);
-        let fechaStr = fechaBase.toISOString().split('T')[0];
-        cuotasArray.push({
-            prestamo_id: prestamoId,
-            monto_esperado: cuotaDiaria,
-            monto_pagado: 0,
-            fecha: fechaStr
-        });
-    }
-
-    await db.from('cuotas').insert(cuotasArray);
-    alert('Préstamo generado y calendarizado exitosamente.');
-    cargarDatos();
-}
-
-window.onload = () => {
-    document.getElementById('filtroFechaGasto').value = obtenerFechaLocalHoy();
-    cargarDatos();
-};
 </script>
 </body>
 </html>
