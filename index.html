@@ -15,7 +15,7 @@
             --card-bg: rgba(255, 255, 255, 0.95);
             --text-main: #1e293b;
             --text-muted: #64748b;
-            --primary: #b38f27; /* Dorado ajustado */
+            --primary: #b38f27;
             --primary-hover: #99771f;
             --success: #059669;
             --danger: #dc2626;
@@ -27,7 +27,6 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            /* Fondo actualizado con color de respaldo y la imagen */
             background-color: #0f172a;
             background: linear-gradient(rgba(10, 15, 30, 0.35), rgba(10, 15, 30, 0.35)), url('fondo.jpg');
             background-size: cover;
@@ -39,13 +38,11 @@
             color: var(--text-main);
         }
 
-        /* LAYOUT PRINCIPAL */
         .app-layout {
             display: flex;
             min-height: 100vh;
         }
 
-        /* SIDEBAR LATERAL */
         aside {
             width: 260px;
             background-color: var(--sidebar-bg);
@@ -103,16 +100,15 @@
             border-left: 3px solid var(--primary);
         }
 
-        /* CONTENIDO PRINCIPAL - MODIFICADO PARA DEJAR VER LA "M" */
+        /* CONTENIDO PRINCIPAL - AJUSTADO PARA EVITAR TUPIR EL LOGOTIPO */
         main {
-            margin-left: 310px; /* Desplazado más a la derecha para liberar espacio al logotipo */
-            margin-right: 40px;  /* Margen derecho para que no pegue con la orilla */
+            margin-left: 320px;
+            margin-right: 50px;
             flex: 1;
             padding: 30px 0;
-            max-width: calc(100% - 350px);
+            max-width: calc(100% - 370px);
         }
 
-        /* VISTAS SEPARADAS */
         .vista-seccion {
             display: none;
         }
@@ -120,7 +116,6 @@
             display: block;
         }
 
-        /* TOPBAR */
         .topbar {
             display: flex;
             justify-content: space-between;
@@ -151,7 +146,6 @@
             border: 1px solid rgba(5, 150, 105, 0.2);
         }
 
-        /* DASHBOARD PRINCIPAL */
         .hero-dashboard {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
@@ -196,7 +190,6 @@
         }
         .btn-cierre:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(212, 175, 55, 0.5); }
 
-        /* TARJETAS ESTADÍSTICAS */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -228,7 +221,6 @@
             margin-top: 5px;
         }
 
-        /* SECCIONES / TARJETAS DE CONTENIDO */
         .card-section {
             background: var(--card-bg);
             backdrop-filter: blur(10px);
@@ -309,7 +301,6 @@
         .btn-blue { background: #f1f5f9; color: var(--primary); border: 1px solid var(--border); }
         .btn-red { background: rgba(220, 38, 38, 0.1); color: #dc2626; border: 1px solid rgba(220, 38, 38, 0.2); }
 
-        /* TABLAS */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -347,7 +338,6 @@
             margin-right: 3px;
         }
 
-        /* MODAL */
         .modal {
             display: none;
             position: fixed;
@@ -384,7 +374,6 @@
 <body>
 
 <div class="app-layout">
-    <!-- BARRA LATERAL -->
     <aside>
         <div>
             <div class="brand">
@@ -403,15 +392,12 @@
         </div>
     </aside>
 
-    <!-- CONTENIDO PRINCIPAL -->
     <main>
-        <!-- TOPBAR -->
         <div class="topbar">
             <h1 id="tituloTopBar">Panel de Control</h1>
             <div class="cloud-badge">🟢 Conectado a la Nube</div>
         </div>
 
-        <!-- 1. VISTA: PANEL GENERAL -->
         <div id="panelGeneral" class="vista-seccion activa">
             <div class="hero-dashboard">
                 <div class="hero-stat">
@@ -451,7 +437,6 @@
             </div>
         </div>
 
-        <!-- 2. VISTA: CLIENTES -->
         <div id="seccionClientes" class="vista-seccion">
             <div class="card-section">
                 <h2>Registro de Cliente Nuevo e INE / Credencial</h2>
@@ -482,7 +467,6 @@
             </div>
         </div>
 
-        <!-- 3. VISTA: PRÉSTAMOS -->
         <div id="seccionPrestamos" class="vista-seccion">
             <div class="card-section">
                 <h2>Otorgamiento de Préstamo</h2>
@@ -508,7 +492,6 @@
             </div>
         </div>
 
-        <!-- 4. VISTA: GASTOS -->
         <div id="seccionGastos" class="vista-seccion">
             <div class="card-section">
                 <h2>
@@ -540,7 +523,6 @@
     </main>
 </div>
 
-<!-- MODAL HISTORIAL -->
 <div id="modalDias" class="modal">
     <div class="modal-content">
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 20px;">
@@ -563,7 +545,6 @@
     </div>
 </div>
 
-<!-- MODAL VISUALIZADOR DE FOTOS -->
 <div id="modalFoto" class="modal" onclick="cerrarModalFoto()">
     <div class="modal-content" style="width: 500px; text-align: center;" onclick="event.stopPropagation()">
         <h3 id="tituloFotoModal" style="margin-top: 0; color: var(--primary);">Credencial del Cliente</h3>
@@ -574,7 +555,6 @@
 </div>
 
 <script>
-// CONFIGURACIÓN DE SUPABASE
 const SUPABASE_URL = 'https://yfstawbevnffxgjbuxey.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_ruj9wGGeS4d7c7GvfqHN3Q_qu0JR2BH';
 const { createClient } = supabase;
@@ -812,10 +792,7 @@ async function guardarCliente() {
             foto_reverso: fotoReversoBase64
         }]);
 
-        if(error) {
-            console.error("Detalle del error:", error);
-            return alert('Error al guardar cliente: ' + error.message);
-        }
+        if(error) return alert('Error al guardar cliente: ' + error.message);
 
         document.getElementById('nombreCliente').value = '';
         document.getElementById('telCliente').value = '';
@@ -826,7 +803,6 @@ async function guardarCliente() {
         alert('Cliente guardado exitosamente');
         cargarDatos();
     } catch(err) {
-        console.error("Error al procesar:", err);
         alert('Ocurrió un error al procesar las credenciales.');
     }
 }
